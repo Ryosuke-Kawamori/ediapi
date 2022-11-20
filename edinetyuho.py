@@ -22,7 +22,12 @@ def try_first_value(try_list: list):
         if try_list[0].text is None:
             return np.nan
         else:
-            return EdinetYuho.to_value(try_list[0])
+            try:
+                return float(try_list[0].text)
+            except:
+                return np.nan
+
+
 
 def try_first_text(try_list: list):
     if len(try_list) == 0:
@@ -68,7 +73,6 @@ class EdinetApi:
             res = requests.get(EdinetApi.DOCMETA_URL, params=params, verify=False)
             edinet_metadata = pd.DataFrame(res.json()['results'])
             edinet_metadata.columns = [col.upper() for col in edinet_metadata.columns]
-            #RKPostgres().insert_dataframe('edinet.document_meta', edinet_metadata)
             return edinet_metadata
         except:
             pass
@@ -90,7 +94,11 @@ class EdinetApi:
             with open(filename, 'wb') as f:
                 for chunk in res.iter_content(chunk_size=1024):
                     f.write(chunk)
-            zipfile.ZipFile(filename).extractall(os.path.join(output_dir_path, doc_id))
+            try:
+                with zipfile.ZipFile(filename) as zf:
+                    zf.extractall(os.path.join(output_dir_path, doc_id))
+            except zipfile.BadZipfile:
+                logger.info(f'''BadZipfile{filename}''')
 
 
 class EdinetYuho:
@@ -121,7 +129,7 @@ class EdinetYuho:
             is_exists = len(root.xpath(f'''//jpcrp_cor:NameMajorShareholders[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')}))
             if is_exists == 1:
                 member = try_first_text(root.xpath(f'''//jpcrp_cor:NameMajorShareholders[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')}))
-                share= int(try_first_value(root.xpath(f'''//jpcrp_cor:NumberOfSharesHeld[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')})))
+                share= try_first_value(root.xpath(f'''//jpcrp_cor:NumberOfSharesHeld[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')}))
                 adress = try_first_text(root.xpath(f'''//jpcrp_cor:AddressMajorShareholders[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')}))
                 ratio = try_first_value(root.xpath(f'''//jpcrp_cor:ShareholdingRatio[@contextRef="CurrentYearInstant_No{i}MajorShareholdersMember"]''', namespaces={'jpcrp_cor': root.nsmap.get('jpcrp_cor')}))
                 major_shares.append([i, member, adress, share, ratio])
