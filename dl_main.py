@@ -48,16 +48,6 @@ for idx, df in tqdm(meta.pipe(lambda df: df.dropna(subset=['SECCODE'])).iterrows
             .assign(DOCID = docid)
         )
 
-        officer = (
-            edinet_yuho.officer
-            .rename(columns = {'レコード番号': 'SEQNO',
-                               '役職名': 'POSITION',
-                               '氏名': 'NAME',
-                               '所有株式数(普通株式)': 'SHARE'
-                   })
-            .assign(DOCID = docid)
-        )
-
         stocksetc = (
             edinet_yuho.stocksetc
              .rename(columns = {'レコード番号': 'SEQNO',
@@ -82,5 +72,5 @@ for idx, df in tqdm(meta.pipe(lambda df: df.dropna(subset=['SECCODE'])).iterrows
         RKPostgres().insert_dataframe('edinet.issued_share', issued_share)
     
     except:
-        print(docid)
+        logger.info(docid)
         dame_docid.append(docid)
