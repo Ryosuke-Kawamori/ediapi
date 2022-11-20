@@ -35,6 +35,19 @@ def try_first_text(try_list: list):
     else:
         return try_list[0].text
 
+    
+def normalize_company_name(x: pd.Series):
+    return (x
+            .fillna('')
+            .str.replace('\n', '')
+            .str.strip()
+            .str.replace(' ', '') #)の後に空白があると全角かっこと判断されて?.stripでは空白削除できない
+            .str.upper()
+            .str.normalize('NFKC')
+            .str.replace(re.compile(r'\(株\)|株式会社'), '', regex=True) # 株式会社削除
+            .str.replace(re.compile(r'\(注[1-9]+\)|\(注\)[1-9]+|\(注\)'), '', regex=True) # 注記削除
+            .str.replace(' ', '')
+           )
 
 class EdinetDecimal(Enum):
 
