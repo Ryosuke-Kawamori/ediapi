@@ -1,3 +1,4 @@
+meta = RKPostgres().fetch_query("SELECT * FROM edinet.document_meta").pipe(lambda df: df[df['SECCODE']=='72030'])
 dame_docid = []
 
 for idx, df in tqdm(meta.pipe(lambda df: df.dropna(subset=['SECCODE'])).iterrows()):
